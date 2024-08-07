@@ -21,3 +21,5 @@ ipython
 pandas
 requests
 geopy
+ffmpeg
+firebase_admin

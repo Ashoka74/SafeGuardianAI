@@ -4,6 +4,8 @@ from typing import Dict, Any
 import re
 from jsonschema import validate, ValidationError
 import streamlit as st
+import datetime 
+
 
 logger = logging.getLogger(__name__)
 
@@ -95,11 +97,13 @@ def process_json_response(response: str, schema: Dict[str, Any]) -> Dict[str, An
         raise
 
 # Usage example
-def update_victim_info(response: str, schema: Dict[str, Any]) -> None:
+def upload_victim_info(response: str, schema: Dict[str, Any], timestamp=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")) -> None:
     try:
         processed_json = process_json_response(response, schema)
         st.session_state['victim_info'] = processed_json
+        # add a timestamp
+        st.session_state['victim_info']['timestamp'] = timestamp
         logger.info("Victim info updated successfully")
     except Exception as e:
         logger.error(f"Failed to update victim info: {e}")
-        st.error(f"An error occurred while processing the response: {e}")
+        #st.error(f"An error occurred while processing the response: {e}")

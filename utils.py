@@ -256,7 +256,10 @@ schema = {
       "type": "object",
       "properties": {
         "id": {"type": "string"},
-        "emergency_status": {"type": "string"},
+        "emergency_status": {
+                "type": "string",
+                "enum": ["critical", "very_urgent", "urgent", "stable", ""]
+                },       
         "location": {
           "type": "object",
           "properties": {

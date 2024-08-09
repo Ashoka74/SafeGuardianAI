@@ -10,23 +10,20 @@ from typing import Dict, Any, List
 import jsonschema
 import os
 import datetime
-time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 import google.generativeai as genai
 from jsonschema import validate
-
+from utils import tool_config_from_mode, schema
 
 from utils import GeminiConfig, schema, fix_json, fix_json_schema
 from LLM.function_calling.geolocation_data import GeolocationService
 from LLM.function_calling.rescue_data import get_rescue_data
 from LLM.function_calling.vital_data import update_victim_json
-from json_cleaner import update_victim_info
+from json_cleaner import upload_victim_info
 
 from RecueTeam import fetch_vital_data
-from audio_processing import process_audio, play_audio  
-from location_services import get_user_location
-from api_clients import text_to_speech_elevenlabs
+from audio_processing import process_audio, play_audio, text_to_speech_elevenlabs
+from funcion_calling import provide_user_location, get_gmail_account
 from state_manager import StateManager
-
 
 state_manager = StateManager()
 
@@ -42,14 +39,26 @@ config = GeminiConfig(gemini_api, model_path, response_type)
 geolocation_service = GeolocationService(os.getenv('geolocator_api'))
 victim_template = fetch_vital_data.victim_template
 
+
+def get_location_from_wifi() -> str:
+    try:
+        return geolocation_service.get_location()
+    except Exception as e:
+        return f"Error occurred: {e}"
+
 # Streamlit setup
-st.set_page_config(page_title="Natural Hazard Rescue Bot 💬", layout="wide", page_icon="⚠️")
+st.set_page_config(page_title="Natural Hazard Rescue Bot💬", layout="wide", page_icon="🚑")
 st._config.set_option("theme.base", "dark")
 st._config.set_option("theme.backgroundColor", "black")
+st._config.set_option("runner.fastReruns", "false")
 
 # Initialize state
+
+# JSON Schema
 if "victim_template" not in st.session_state:
     st.session_state['victim_template'] = victim_template
+
+# Updated JSON Schema
 if "victim_info" not in st.session_state:
     st.session_state.victim_info = victim_template
 if "victim_number" not in st.session_state:
@@ -58,24 +67,33 @@ if "victim_number" not in st.session_state:
 # Function calling definitions
 function_calling = {
     'get_rescue_data': get_rescue_data,
-    'get_location': get_user_location
+    'get_location': provide_user_location,
+    'get_location_from_wifi': get_location_from_wifi
+    # Add more functions here!
 }
+
+system_instructions = "You are a post-disaster bot. Help victims while collecting valuable data for intervention teams. Your aim is to complete this template : {victim_info} Only return JSON output when calling function."
+
 
 # Gemini setup
 model = genai.GenerativeModel(
     config.model_path,
     tools=list(function_calling.values()),
-    system_instruction="You are a post-disaster bot. Help victims while collecting valuable data for intervention teams. Only return JSON output when calling functions.",
+    system_instruction=system_instructions,
     safety_settings=config.safety
+    #tool_config = tool_config_from_mode(mode='any', fns=function_calling.keys())
 )
+
+# initialize chat
 chat = model.start_chat(enable_automatic_function_calling=True)
 
+# initialize streamlit components
 def main():
-    st.title("💬 Natural Hazard Rescue App⚠️")
+    st.title("💬 Natural Hazard Rescue App ⚠️🚑")
     st.write("This bot is designed to help victims of natural disasters by providing support and information. It can also collect valuable data for intervention teams.")
 
+    # create 3 columns
     left, middle, right = st.columns([.5, .1, .4])
-
     # Chat input and display
     with left:
         chat_container(height=820)
@@ -84,12 +102,15 @@ def main():
     with right:
         display_victim_info()
 
+# create chat container
 def chat_container(height: int):
     with st.container(height=height, border=True):
         left_, right_ = st.columns([.8, .2])
         with right_:
+            # from audio
             audio = audiorecorder("🎤", "stop", show_visualizer=False)
-        with left_:    
+        with left_:  
+            # from text  
             prompt = st.chat_input("Enter Query here") or process_audio(audio)
         if prompt:
             state_manager.add_message(role="user", content=prompt)
@@ -99,6 +120,7 @@ def chat_container(height: int):
                 logger.error(f"Error generating response: {e}")
                 response = generate_manual_response(prompt)
             state_manager.add_message("assistant", response)
+            # try to play audio response (if API valid)
             try:
                 play_audio(response)
             except Exception as e:
@@ -109,13 +131,14 @@ def chat_container(height: int):
 
 def display_victim_info():
     st.write("Victim Info:\n\n", st.session_state.victim_info)
-    # if st.button("Send Data to Firebase"):
+    # send data to FireBase
     try:
         fetch_vital_data.update_(st.session_state['victim_number'], st.session_state['victim_info'])
-        st.success(f"timestamp:{time}\n\nvictim_id: {st.session_state['victim_number']} data sent to rescue team")
+        time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        st.success(f"{time}\nID: {st.session_state['victim_number']} \n Your data has been sent to the Rescue Team.")
     except Exception as e:
         logger.error(f"Error sending data to Firebase: {e}")
-        st.error("Failed to send data to Firebase. Please try again.")
+        st.warning("{time}\nError sending data to the Rescue Team.")
 
 def generate_response(user_input: str) -> str:
     response = chat.send_message(user_input)
@@ -157,10 +180,13 @@ def extract_function_calls(response) -> List[Dict[str, Any]]:
     return function_calls
 
 
-
 def process_json_response(response: str):
+    # check if response is JSON
     if '```json' in response:
-        update_victim_info(update_victim_json(new_infos=response), schema)
+        try:
+            upload_victim_info(update_victim_json(new_infos=response), schema)
+        except:
+            st.warning("Error updating victim info.")
+            
 
-if __name__ == "__main__":
-    main()
+main()

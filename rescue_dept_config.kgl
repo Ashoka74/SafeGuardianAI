@@ -1,0 +1,161 @@
+{
+  "version": "v1",
+  "config": {
+    "visState": {
+      "layers": [
+        {
+          "id": "k1xxw47",
+          "type": "icon",
+          "config": {
+            "dataId": "rescue_departments",
+            "label": "Rescue Departments",
+            "color": [
+              210,
+              0,
+              0
+            ],
+            "highlightColor": [
+              252,
+              242,
+              26,
+              255
+            ],
+            "columns": {
+              "lat": "latitude",
+              "lng": "longitude",
+              "icon": "icon"
+            },
+            "isVisible": true,
+            "visConfig": {
+              "radius": 35.9,
+              "fixedRadius": false,
+              "opacity": 0.8,
+              "colorRange": {
+                "name": "Global Warming",
+                "type": "sequential",
+                "category": "Uber",
+                "colors": [
+                  "#5A1846",
+                  "#900C3F",
+                  "#C70039",
+                  "#E3611C",
+                  "#F1920E",
+                  "#FFC300"
+                ]
+              },
+              "radiusRange": [
+                0,
+                50
+              ]
+            },
+            "hidden": false,
+            "textLabel": [
+              {
+                "field": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "size": 18,
+                "offset": [
+                  0,
+                  0
+                ],
+                "anchor": "start",
+                "alignment": "center"
+              }
+            ]
+          },
+          "visualChannels": {
+            "colorField": null,
+            "colorScale": "quantile",
+            "sizeField": null,
+            "sizeScale": "linear"
+          }
+        }
+      ],
+      "interactionConfig": {
+        "tooltip": {
+          "fieldsToShow": {
+            "qw5zqkhrp": [
+              {
+                "name": "emergency_status",
+                "format": null
+              },
+              {
+                "name": "index",
+                "format": null
+              },
+              {
+                "name": "latitude",
+                "format": null
+              },
+              {
+                "name": "longitude",
+                "format": null
+              },
+              {
+                "name": "location.details",
+                "format": null
+              }
+            ],
+            "hmakkovr9": [
+              {
+                "name": "0",
+                "format": null
+              }
+            ]
+          },
+          "compareMode": false,
+          "compareType": "absolute",
+          "enabled": true
+        },
+        "brush": {
+          "size": 0.5,
+          "enabled": false
+        },
+        "geocoder": {
+          "enabled": false
+        },
+        "coordinate": {
+          "enabled": false
+        }
+      },
+      "layerBlending": "normal",
+      "splitMaps": [],
+      "animationConfig": {
+        "currentTime": null,
+        "speed": 1
+      }
+    },
+    "mapState": {
+      "bearing": 0,
+      "dragRotate": false,
+      "latitude": 34.502289455408366,
+      "longitude": -27.82946603675378,
+      "pitch": 0,
+      "zoom": 2.745704196646382,
+      "isSplit": false
+    },
+    "mapStyle": {
+      "styleType": "dark",
+      "topLayerGroups": {},
+      "visibleLayerGroups": {
+        "label": true,
+        "road": true,
+        "border": false,
+        "building": true,
+        "water": true,
+        "land": true,
+        "3d building": false
+      },
+      "threeDBuildingColor": [
+        9.665468314072013,
+        17.18305478057247,
+        31.1442867897876
+      ],
+      "mapStyles": {}
+    }
+  }
+}
